@@ -12,8 +12,8 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          '100': '#8B4513', // Lighter shade of brown (Sienna)
-          DEFAULT: '#c07a35', // Suitcase brownish color (SaddleBrown)
+          '100': '#8B4513',
+          DEFAULT: '#c07a35',
         },
         red: '#FF7474',
         error: '#b80000',
