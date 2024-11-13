@@ -16,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { createAccount } from '@/lib/actions/user.action';
+import OTPModal from './OTPModal';
 
 type FormType = 'sign-in' | 'sign-up';
 
@@ -46,6 +47,9 @@ const AuthForm = ({ type }: { type: FormType }) => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     setErrorMessage('');
+
+    console.log(accountId);
+
     try {
       const user = await createAccount({
         fullName: values.fullName || '',
@@ -55,7 +59,6 @@ const AuthForm = ({ type }: { type: FormType }) => {
     } catch {
       setErrorMessage('Failed to create account. Please try again.');
     } finally {
-      console.log(accountId);
       setIsLoading(false);
     }
   };
@@ -140,7 +143,10 @@ const AuthForm = ({ type }: { type: FormType }) => {
           </div>
         </form>
       </Form>
-      {/* Otp verification hunxa yeta paxiii */}
+
+      {accountId && (
+        <OTPModal email={form.getValues('email')} accountId={accountId} />
+      )}
     </>
   );
 };

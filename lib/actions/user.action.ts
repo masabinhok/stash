@@ -4,6 +4,7 @@ import { ID, Query } from 'node-appwrite';
 import { createAdminClient } from '../appwrite';
 import { appwriteConfig } from '../appwrite/config';
 import { parseStringify } from '../utils';
+import { cookies } from 'next/headers';
 
 const getUserByEmail = async (email: string) => {
   const { databases } = await createAdminClient();
@@ -20,7 +21,7 @@ const handleError = (error: unknown, message: string) => {
   throw error;
 };
 
-const sendEmailOTP = async (email: string) => {
+export const sendEmailOTP = async ({ email }: { email: string }) => {
   const { account } = await createAdminClient();
 
   try {
@@ -39,11 +40,11 @@ export const createAccount = async ({
   fullName: string;
   email: string;
 }) => {
-  const exisitingUser = await getUserByEmail(email);
-  const accountId = await sendEmailOTP(email);
+  const existingUser = await getUserByEmail(email);
+  const accountId = await sendEmailOTP({ email });
   if (!accountId) throw new Error('Failed to send an OTP');
 
-  if (!exisitingUser) {
+  if (!existingUser) {
     const { databases } = await createAdminClient();
 
     await databases.createDocument(
@@ -60,5 +61,32 @@ export const createAccount = async ({
     );
   }
   // to send large payloads through server actions we first have to stringify it and then parse it
-  return parseStringify(accountId);
+  return parseStringify({ accountId });
+};
+
+export const verifySecret = async ({
+  accountId,
+  password,
+}: {
+  accountId: string;
+  password: string;
+}) => {
+  try {
+    const { account } = await createAdminClient();
+
+    const session = await account.createSession(accountId, password);
+
+    (await cookies()).set('appwrite-session', session.secret, {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'strict',
+      secure: true,
+    });
+
+    return parseStringify({
+      sessionId: session.$id,
+    });
+  } catch (error) {
+    handleError(error, 'Failed to verify OTP');
+  }
 };
